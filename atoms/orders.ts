@@ -1,3 +1,5 @@
 import { atom } from 'jotai';
 
-export const ordersAtom = atom(null);
+// state
+export const ordersAtom = atom<Order[] | null>(null);
+export const latestOrdersAtom = atom<Order[]>([]);

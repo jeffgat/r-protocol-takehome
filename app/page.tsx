@@ -1,53 +1,101 @@
 'use client';
 
 import axios from 'axios';
-import Swap from './Swap';
-import Orders from './Orders';
-import { useEffect, useState } from 'react';
+import { use, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { ordersAtom } from '@/atoms/orders';
-
-const tokens = {
-  eth: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // (weth)
-  usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-  imx: '0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF'
-};
+import { latestOrdersAtom, ordersAtom } from '@/atoms/orders';
+import TokenPairs from './TokenPairs';
+import OrderBook from './OrderBook';
+import { tokenPairAtom } from '@/atoms/tokenPair';
+import LatestOrders from './LatestOrders';
+import WidgetWrapper from '@/components/ui/widget-wrapper';
+import useWebSocket from 'react-use-websocket';
+import { v4 as uuidv4 } from 'uuid';
+import { TOKEN_LIST } from '@/constants';
 
 export default function Home() {
   const [_, setOrders] = useAtom(ordersAtom);
+  const [latestOrders, setLatestOrders] = useAtom(latestOrdersAtom);
+  const [tokenPair] = useAtom(tokenPairAtom);
+  // todo remove
+  console.log('latestOrders', latestOrders);
+
+  // websocket connection
+  const { sendJsonMessage } = useWebSocket('wss://api.0x.org/orderbook/v1', {
+    onOpen: () => {
+      sendJsonMessage({
+        type: 'subscribe',
+        channel: 'orders',
+        requestId: uuidv4()
+      });
+    },
+    onClose: () => console.log('ws connection closed.'),
+    shouldReconnect: (closeEvent) => true,
+    onMessage: (event: WebSocketEventMap['message']) => {
+      // add order to latest orders if it's in TOKEN_LIST
+      if (
+        TOKEN_LIST.find((t) => t.address === JSON.parse(event.data).payload[0].order.takerToken) &&
+        TOKEN_LIST.find((t) => t.address === JSON.parse(event.data).payload[0].order.makerToken)
+      ) {
+        setLatestOrders((prev) => [...prev, JSON.parse(event.data).payload[0].order]);
+      }
+    }
+  });
 
   useEffect(() => {
-    const getOrders = async () => {
-      try {
-        const res = await axios.get(
-          `https://api.0x.org/orderbook/v1?quoteToken=${tokens.usdc}&baseToken=${tokens.eth}`
-        );
-        setOrders(res.data);
-      } catch (err) {
-        console.log('err', err);
-      }
+    // refetch orderbook data when tokenPair changes or new order is added via websocket
+    const getOrderbook = async () => {
+      // get orders via orderbook api
+      const orderbook = await axios.get('/api/orderbook', {
+        params: {
+          base: tokenPair.base.token,
+          quote: tokenPair.quote.token
+        }
+      });
+      // get orders saved to state via websocket
+      const matchedLatestOrders = latestOrders.filter((o) => {
+        return o.makerToken === tokenPair.base.address && o.takerToken === tokenPair.quote.address;
+      });
+
+      const bids = orderbook.data.response.bids.records.map((record: any) => {
+        return record.order;
+      });
+
+      // merge asks and bids
+      const mergedOrders = [...bids, ...matchedLatestOrders];
+      // sort merged orders by
+      setOrders(mergedOrders);
     };
 
-    getOrders();
-  }, [setOrders]);
+    getOrderbook();
+  }, [setOrders, tokenPair, latestOrders]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-6 md:p-24">
       <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="text-center sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="mt-6 text-2xl font-bold leading-9 tracking-tight text-neutral-50">
-            Get token orderbook data
+            Get token order book data
           </h2>
           <p className="opacity-60">See price data between two tokens in real-time</p>
         </div>
-        <div className="flex space-x-4">
-          <Swap />
-          <Orders />
+        <div className="flex flex-col items-center lg:flex-row lg:space-x-4 lg:items-start">
+          <WidgetWrapper>
+            <TokenPairs />
+          </WidgetWrapper>
+
+          <WidgetWrapper>
+            <OrderBook />
+          </WidgetWrapper>
+
+          <WidgetWrapper>
+            <LatestOrders />
+          </WidgetWrapper>
         </div>
+        <p className="mt-10 text-center text-sm opacity-60">
+          Risk Protocol assignment by Jeffrey Gatbonton
+        </p>
       </div>
-      {/* <p className="mt-10 text-center text-sm opacity-60">
-        Risk Protocol assignment by Jeffrey Gatbonton
-      </p> */}
     </main>
   );
 }
