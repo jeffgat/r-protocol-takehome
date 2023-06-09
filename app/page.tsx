@@ -15,8 +15,8 @@ import { TOKEN_LIST } from '@/constants';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Home() {
-  const [_, setBids] = useAtom(bidsAtom);
-  const [__, setAsks] = useAtom(asksAtom);
+  const [_bids, setBids] = useAtom(bidsAtom);
+  const [_asks, setAsks] = useAtom(asksAtom);
   const [fetchError, setFetchError] = useState('');
   const [latestOrders, setLatestOrders] = useAtom(latestOrdersAtom);
   const [tokenPair] = useAtom(tokenPairAtom);
@@ -51,6 +51,9 @@ export default function Home() {
     const getOrderbook = async () => {
       // get orders via orderbook api
       try {
+        // needs to be dbounced
+        // debounce to avoid rate limit, also just good practice
+
         const orderbook = await axios.get('/api/orderbook', {
           params: {
             base: tokenPair.base.token,
@@ -91,7 +94,16 @@ export default function Home() {
       }
     };
 
-    getOrderbook();
+    // debounce to avoid rate limit
+    let debounceTimer: NodeJS.Timeout;
+    function debounce() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        getOrderbook();
+        // rate limit is 500ms
+      }, 550);
+    }
+    debounce();
   }, [setBids, setAsks, tokenPair, latestOrders]);
 
   return (
