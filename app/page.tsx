@@ -1,7 +1,7 @@
 'use client';
 
 import axios from 'axios';
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { latestOrdersAtom, bidsAtom, asksAtom } from '@/atoms/orders';
 import TokenPairs from './TokenPairs';

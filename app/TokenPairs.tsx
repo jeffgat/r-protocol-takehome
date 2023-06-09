@@ -1,8 +1,6 @@
 'use client';
 
 import { tokenPairAtom } from '@/atoms/tokenPair';
-import DownArrow from '@/components/svg/down-arrow';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
