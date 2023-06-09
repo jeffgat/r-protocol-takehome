@@ -3,6 +3,7 @@ import { TOKEN_LIST } from '@/constants';
 import React from 'react';
 import OrderRow from './OrderRow';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Props = {
   heading: string;
@@ -10,7 +11,7 @@ type Props = {
   height?: string;
 };
 
-const OrderList = ({ orders, heading, height = "h-72" }: Props) => {
+const OrderList = ({ orders, heading, height = 'h-72' }: Props) => {
   return (
     <>
       <div className="px-6 py-4 border-b-2 border-neutral-800 relative flex space-x-2">
@@ -39,7 +40,9 @@ const OrderList = ({ orders, heading, height = "h-72" }: Props) => {
           })
         ) : (
           <>
-            <p className="font-semibold text-sm text-neutral-100 tracking-wide">
+            <Skeleton className="h-4 w-full bg-neutral-850 mb-2" />
+            <Skeleton className="h-4 w-full bg-neutral-850 mb-2" />
+            <p className="text-sm text-neutral-100 tracking-wide opacity-60">
               No new orders have been placed with these asset pairs yet.
             </p>
           </>

@@ -1,6 +1,7 @@
 import { formatErc20 } from '@/lib/utils';
 import React from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 interface OrderRowProps {
   taker: TokenInfo;
@@ -9,8 +10,14 @@ interface OrderRowProps {
 }
 
 const OrderRow = ({ maker, taker, order }: OrderRowProps) => {
+  console.log('order', order);
   return (
-    <div className="flex justify-between">
+    <motion.div
+      className="flex justify-between"
+      initial={{ opacity: 0, x: -6 }}
+      animate={{ opacity: 1, x: 0 }}
+      key={order.signature.r}
+    >
       <div className="flex items-center my-2 space-x-1">
         <Image src={taker.icon} width={12} height={12} alt="" />
         <p className="text-xs text-neutral-100">{formatErc20(order.takerAmount, taker.decimals)}</p>
@@ -19,7 +26,7 @@ const OrderRow = ({ maker, taker, order }: OrderRowProps) => {
         <Image src={maker.icon} width={12} height={12} alt="" />
         <p className="text-xs text-neutral-100">{formatErc20(order.makerAmount, maker.decimals)}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 export default OrderRow;
