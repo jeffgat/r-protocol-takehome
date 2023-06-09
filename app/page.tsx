@@ -25,6 +25,7 @@ export default function Home() {
   const { sendJsonMessage } = useWebSocket('wss://api.0x.org/orderbook/v1', {
     onOpen: () => {
       console.log('ws connection opened');
+      // subscribe to orders
       sendJsonMessage({
         type: 'subscribe',
         channel: 'orders',
@@ -34,6 +35,7 @@ export default function Home() {
     onClose: () => console.log('ws connection closed'),
     shouldReconnect: (closeEvent) => true,
     onMessage: (event: WebSocketEventMap['message']) => {
+      // need to filter this way because passing filters through to websocket via request does not seem to work
       // add order to latest orders if it's in TOKEN_LIST
       if (
         TOKEN_LIST.find((t) => t.address === JSON.parse(event.data).payload[0].order.takerToken) &&
@@ -77,16 +79,15 @@ export default function Home() {
         // separate the two because bids don't come through on the websocket
         setAsks(mergedOrders);
         setBids(bids);
-      } catch (err) {
+      } catch (_) {
         // handle error
         setFetchError(
           'Could not fetch orders from 0x labs. Please refresh the page or try again later'
         );
+        // reset error state
         setTimeout(() => {
           setFetchError('');
         }, 3000);
-        // send error to logger
-        console.log('err', err);
       }
     };
 

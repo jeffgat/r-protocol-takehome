@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const data = await res.json();
     return NextResponse.json({ response: data });
   } catch (error) {
+    // send error to logger
     console.error(error);
     return NextResponse.error();
   }
