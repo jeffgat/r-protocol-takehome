@@ -12,6 +12,7 @@ import WidgetWrapper from '@/components/ui/widget-wrapper';
 import useWebSocket from 'react-use-websocket';
 import { v4 as uuidv4 } from 'uuid';
 import { TOKEN_LIST } from '@/constants';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Home() {
   const [_, setBids] = useAtom(bidsAtom);
@@ -81,6 +82,9 @@ export default function Home() {
         setFetchError(
           'Could not fetch orders from 0x labs. Please refresh the page or try again later'
         );
+        setTimeout(() => {
+          setFetchError('');
+        }, 3000);
         // send error to logger
         console.log('err', err);
       }
@@ -111,7 +115,18 @@ export default function Home() {
             <LatestOrders />
           </WidgetWrapper>
         </div>
-        {fetchError && <p className="mt-4 text-center text-md text-red-400">{fetchError}</p>}
+        <AnimatePresence>
+          {fetchError && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mt-4 text-center text-md text-red-400"
+            >
+              {fetchError}
+            </motion.p>
+          )}
+        </AnimatePresence>
         <p className="mt-10 text-center text-sm opacity-60">
           Risk Protocol assignment by Jeffrey Gatbonton
         </p>
