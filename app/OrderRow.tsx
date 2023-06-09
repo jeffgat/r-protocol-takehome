@@ -10,7 +10,6 @@ interface OrderRowProps {
 }
 
 const OrderRow = ({ maker, taker, order }: OrderRowProps) => {
-  console.log('order', order);
   return (
     <motion.div
       className="flex justify-between"

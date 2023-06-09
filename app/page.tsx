@@ -1,7 +1,7 @@
 'use client';
 
 import axios from 'axios';
-import { use, useEffect } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { latestOrdersAtom, bidsAtom, asksAtom } from '@/atoms/orders';
 import TokenPairs from './TokenPairs';
@@ -16,21 +16,21 @@ import { TOKEN_LIST } from '@/constants';
 export default function Home() {
   const [_, setBids] = useAtom(bidsAtom);
   const [__, setAsks] = useAtom(asksAtom);
+  const [fetchError, setFetchError] = useState('');
   const [latestOrders, setLatestOrders] = useAtom(latestOrdersAtom);
   const [tokenPair] = useAtom(tokenPairAtom);
-  // todo remove
-  console.log('latestOrders', latestOrders);
 
   // websocket connection
   const { sendJsonMessage } = useWebSocket('wss://api.0x.org/orderbook/v1', {
     onOpen: () => {
+      console.log('ws connection opened');
       sendJsonMessage({
         type: 'subscribe',
         channel: 'orders',
         requestId: uuidv4()
       });
     },
-    onClose: () => console.log('ws connection closed.'),
+    onClose: () => console.log('ws connection closed'),
     shouldReconnect: (closeEvent) => true,
     onMessage: (event: WebSocketEventMap['message']) => {
       // add order to latest orders if it's in TOKEN_LIST
@@ -47,32 +47,43 @@ export default function Home() {
     // refetch orderbook data when tokenPair changes or new order is added via websocket
     const getOrderbook = async () => {
       // get orders via orderbook api
-      const orderbook = await axios.get('/api/orderbook', {
-        params: {
-          base: tokenPair.base.token,
-          quote: tokenPair.quote.token
-        }
-      });
-      // get orders saved to state via websocket
-      const matchedLatestOrders = latestOrders.filter((o) => {
-        return o.makerToken === tokenPair.base.address && o.takerToken === tokenPair.quote.address;
-      });
+      try {
+        const orderbook = await axios.get('/api/orderbook', {
+          params: {
+            base: tokenPair.base.token,
+            quote: tokenPair.quote.token
+          }
+        });
+        // get orders saved to state via websocket
+        const matchedLatestOrders = latestOrders.filter((o) => {
+          return (
+            o.makerToken === tokenPair.base.address && o.takerToken === tokenPair.quote.address
+          );
+        });
 
-      const asks = orderbook.data.response.asks.records.map((record: any) => {
-        return record.order;
-      });
-      const bids = orderbook.data.response.bids.records.map((record: any) => {
-        return record.order;
-      });
+        const asks = orderbook.data.response.asks.records.map((record: any) => {
+          return record.order;
+        });
+        const bids = orderbook.data.response.bids.records.map((record: any) => {
+          return record.order;
+        });
 
-      const mergedOrders: Order[] = [...matchedLatestOrders, ...asks];
-      mergedOrders.sort((a, b) => {
-        return parseFloat(a.takerAmount) - parseFloat(b.takerAmount);
-      });
+        const mergedOrders: Order[] = [...matchedLatestOrders, ...asks];
+        mergedOrders.sort((a, b) => {
+          return parseFloat(a.takerAmount) - parseFloat(b.takerAmount);
+        });
 
-      // separate the two because bids don't come through on the websocket
-      setAsks(mergedOrders);
-      setBids(bids);
+        // separate the two because bids don't come through on the websocket
+        setAsks(mergedOrders);
+        setBids(bids);
+      } catch (err) {
+        // handle error
+        setFetchError(
+          'Could not fetch orders from 0x labs. Please refresh the page or try again later'
+        );
+        // send error to logger
+        console.log('err', err);
+      }
     };
 
     getOrderbook();
@@ -100,6 +111,7 @@ export default function Home() {
             <LatestOrders />
           </WidgetWrapper>
         </div>
+        {fetchError && <p className="mt-4 text-center text-md text-red-400">{fetchError}</p>}
         <p className="mt-10 text-center text-sm opacity-60">
           Risk Protocol assignment by Jeffrey Gatbonton
         </p>

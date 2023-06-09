@@ -78,11 +78,11 @@ const TokenPairs = () => {
         </p>
       </div>
 
-      <TokenSelect type="base (locked)" value={tokenPair.base.token} locked />
+      <TokenSelect type="base token (locked)" value={tokenPair.base.token} locked />
 
       <div className="border-t-2 border-neutral-800 relative mb-4 mt-6"></div>
 
-      <TokenSelect type="quote" value={tokenPair.quote.token} />
+      <TokenSelect type="quote token" value={tokenPair.quote.token} />
     </>
   );
 };
