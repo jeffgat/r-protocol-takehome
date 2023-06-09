@@ -44,7 +44,7 @@ const OrderList = ({ orders, heading, height = 'h-72' }: OrderListProps) => {
             <Skeleton className="h-3 w-full bg-neutral-850 mb-2" />
             <Skeleton className="h-3 w-1/2 bg-neutral-850 mb-2" />
             <p className="text-sm text-neutral-100 tracking-wide opacity-60">
-              No new orders have been placed with these asset pairs yet.
+              No orders have been created yet.
             </p>
           </>
         )}
