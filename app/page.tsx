@@ -3,7 +3,7 @@
 import axios from 'axios';
 import { use, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { latestOrdersAtom, ordersAtom } from '@/atoms/orders';
+import { latestOrdersAtom, bidsAtom, asksAtom } from '@/atoms/orders';
 import TokenPairs from './TokenPairs';
 import OrderBook from './OrderBook';
 import { tokenPairAtom } from '@/atoms/tokenPair';
@@ -14,7 +14,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { TOKEN_LIST } from '@/constants';
 
 export default function Home() {
-  const [_, setOrders] = useAtom(ordersAtom);
+  const [_, setBids] = useAtom(bidsAtom);
+  const [__, setAsks] = useAtom(asksAtom);
   const [latestOrders, setLatestOrders] = useAtom(latestOrdersAtom);
   const [tokenPair] = useAtom(tokenPairAtom);
   // todo remove
@@ -57,21 +58,28 @@ export default function Home() {
         return o.makerToken === tokenPair.base.address && o.takerToken === tokenPair.quote.address;
       });
 
+      const asks = orderbook.data.response.asks.records.map((record: any) => {
+        return record.order;
+      });
       const bids = orderbook.data.response.bids.records.map((record: any) => {
         return record.order;
       });
 
-      // merge asks and bids
-      const mergedOrders = [...bids, ...matchedLatestOrders];
-      // sort merged orders by
-      setOrders(mergedOrders);
+      const mergedOrders: Order[] = [...matchedLatestOrders, ...asks];
+      mergedOrders.sort((a, b) => {
+        return parseFloat(a.takerAmount) - parseFloat(b.takerAmount);
+      });
+
+      // separate the two because bids don't come through on the websocket
+      setAsks(mergedOrders);
+      setBids(bids);
     };
 
     getOrderbook();
-  }, [setOrders, tokenPair, latestOrders]);
+  }, [setBids, setAsks, tokenPair, latestOrders]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-6 md:p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-6 md:p-24 overflow-x-hidden">
       <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="text-center sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="mt-6 text-2xl font-bold leading-9 tracking-tight text-neutral-50">

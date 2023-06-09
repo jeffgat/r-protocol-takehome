@@ -6,7 +6,7 @@ type Props = {
 
 const WidgetWrapper = ({ children }: Props) => {
   return (
-    <div className="mt-10 min-w-[320px] sm:mx-auto sm:w-full sm:max-w-[480px] sm:min-w-[360px]">
+    <div className="mt-10 min-w-[320px] w-full sm:mx-auto lg:w-[320px] xl:w-[400px]">
       <div className="bg-neutral-900 shadow sm:rounded-lg">{children}</div>
     </div>
   );

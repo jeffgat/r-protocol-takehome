@@ -2,13 +2,19 @@
 
 import React from 'react';
 import { useAtom } from 'jotai';
-import { ordersAtom } from '@/atoms/orders';
+import { asksAtom, bidsAtom } from '@/atoms/orders';
 import OrderList from './OrderList';
 
 const OrderBook = () => {
-  const [orders] = useAtom(ordersAtom);
+  const [bids] = useAtom(bidsAtom);
+  const [asks] = useAtom(asksAtom);
 
-  return <OrderList orders={orders} heading="Order Book" />;
+  return (
+    <div>
+      <OrderList orders={asks} heading="Asks" height="h-48"/>
+      <OrderList orders={bids} heading="Bids" height="h-48"/>
+    </div>
+  );
 };
 
 export default OrderBook;

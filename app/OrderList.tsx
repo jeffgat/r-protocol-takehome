@@ -2,13 +2,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { TOKEN_LIST } from '@/constants';
 import React from 'react';
 import OrderRow from './OrderRow';
+import { cn } from '@/lib/utils';
 
 type Props = {
   heading: string;
   orders: Order[] | null;
+  height?: string;
 };
 
-const OrderList = ({ orders, heading }: Props) => {
+const OrderList = ({ orders, heading, height = "h-72" }: Props) => {
   return (
     <>
       <div className="px-6 py-4 border-b-2 border-neutral-800 relative flex space-x-2">
@@ -23,7 +25,7 @@ const OrderList = ({ orders, heading }: Props) => {
         </p>
       </div>
 
-      <ScrollArea className="h-72 w-full rounded-md p-6 pt-0">
+      <ScrollArea className={cn('w-full rounded-md p-6 pt-0', height)}>
         {orders && orders.length > 0 ? (
           orders.map((o, i) => {
             return (
